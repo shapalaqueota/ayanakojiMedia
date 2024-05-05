@@ -8,7 +8,6 @@ export default function SubscriptionScreen() {
 
   const isFocused = useIsFocused();
   
-
   return (
     <View style={styles.background}>
   

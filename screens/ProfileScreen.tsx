@@ -1,23 +1,26 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import ManageAccount from './icons/manageAccount.svg';
+import AniPlus from './icons/aniPlusIc.svg'
+import AniPoint from './icons/aniPoint.svg'
+
 const profilePicture = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvBFwvb_Vdhyy2pgn6qUkKtCruOQE0XGuX-_j-FsydWw&s';
 
-
 const quickAccessItems = [
-  { id: '1', title: 'Account', Ionicons: 'settings', value:'Manage ⟩' }, 
-  { id: '3', title: 'Plus Status', value: 'Active ⟩' },
-  { id: '4', title: 'Plus Points', value: '0' },
+  { id: '1', title: 'Account', icon: ManageAccount, value:'Manage ⟩' }, 
+  { id: '3', title: 'Plus Status', icon: AniPlus, value: 'Active ⟩' },
+  { id: '4', title: 'Plus Points', icon: AniPoint, value: '0' },
 ];
 
 export default function ProfileScreen() {
   const renderQuickAccessItem = ({ item }: { item: any }) => (
     <TouchableOpacity style={styles.quickAccessItem}>
-      {item.icon && <Ionicons name="settings-sharp" size={24} color="white" style={styles.quickAccessIcon} />}
-      <Text style={styles.quickAccessText}>{item.title}</Text>
+      {item.icon && <item.icon width={19} height={19} style={styles.quickAccessIcon} />}
+      <Text style={styles.quickAccessText}>{item.title}</Text> 
       {item.value && <Text style={styles.quickAccessValue}>{item.value}</Text>}
     </TouchableOpacity>
   );
+  
 
   return (
     <View style={styles.container}>
@@ -66,7 +69,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   list: {
-    
     marginTop: 16,
   },
   quickAccessItem: {
