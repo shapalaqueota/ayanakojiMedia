@@ -1,8 +1,8 @@
-// src/screens/SearchScreen.tsx
-
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Button } from 'react-native';
 import { SearchBar } from 'react-native-elements';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { SearchStackParamList } from '../navigation/SearchStackNavigator';
 
 const recommendations = [
   'Popular Movie 1',
@@ -13,9 +13,16 @@ const recommendations = [
 
 const SearchScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const navigation = useNavigation<NavigationProp<SearchStackParamList>>();
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+      navigation.navigate('SearchResultScreen', { query: searchQuery });
+    }
   };
 
   const renderRecommendation = ({ item }: { item: string }) => (
@@ -34,7 +41,7 @@ const SearchScreen = () => {
         containerStyle={styles.searchBarContainer}
         inputContainerStyle={styles.searchBarInputContainer}
         inputStyle={styles.searchBarInput}
-        
+        onSubmitEditing={handleSearchSubmit}
       />
       <View style={styles.recommendationContainer}>
         <Text style={styles.recommendationHeader}>Recommendations</Text>
@@ -64,7 +71,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   searchBarInput: {
-    color: '#2a2a2a'
+    color: '#ffffff'
   },
   recommendationContainer: {
     flex: 1,

@@ -2,7 +2,7 @@ import React from 'react';
 import { Image, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
-import SearchScreen from '../screens/SearchScreen';
+import SearchStackNavigator from './SearchStackNavigator'; 
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import HomeIcon from './icons/home.svg';
@@ -42,7 +42,7 @@ export default function BottomTabNavigator() {
                   style={{
                     borderColor: focused ? '#0E84FF' : 'transparent',
                     borderWidth: 3,
-                    borderRadius: 100, 
+                    borderRadius: 100,
                   }}
                 >
                   <Image
@@ -61,14 +61,14 @@ export default function BottomTabNavigator() {
         tabBarActiveTintColor: '#0E84FF',
         tabBarInactiveTintColor: '#5c5c5c',
         tabBarStyle: {
-          backgroundColor: '#2a2a2a',
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
           elevation: 0,
           borderTopWidth: 0,
         },
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Search" component={SearchScreen} />
+      <Tab.Screen name="Search" component={SearchStackNavigator} options={{ headerShown: false }} />
       <Tab.Screen name="AniMedia+" component={SubscriptionScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

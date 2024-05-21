@@ -1,10 +1,11 @@
-// src/screens/HomeScreen.tsx
-
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, Image, Dimensions, FlatList, StatusBar} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, Image, Dimensions, FlatList, StatusBar, TouchableOpacity } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Dots from 'react-native-dots-pagination';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { RootStackParamList } from '../navigation/types';
 
 import {
   SectionContainer,
@@ -18,123 +19,100 @@ import {
   Overlay,
   TitleContainer,
   TitleText,
-  NumberText,
   GenreText
 } from '../components/StyledComponents';
 
-interface CarouselItem {
-  imageUrl: string;
+interface Film {
+  id: number;
   title: string;
-  subtitle: string;
+  description: string;
+  is_series: boolean;
+  s3_key: string;
 }
 
-interface AnimeItem {
-  id: string;
-  title: string;
-  imageUrl: string;
-  genre: string;
-}
+const HomeScreen: React.FC = () => {
+  const [films, setFilms] = useState<Film[]>([]);
+  const [carouselItems, setCarouselItems] = useState<any[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-const carouselItems: CarouselItem[] = [
-  {
-    imageUrl: 'https://virtus-img.cdnvideo.ru/images/as-is/plain/f2/f2c72915-06f4-45f4-bacd-ae35f07e82cd.jpg@jpg',
-    title: 'Lessons in Chemistry',
-    subtitle: 'A brilliant scientist becomes a TV cooking show host.'
-  },
-  {
-    imageUrl: 'https://virtus-img.cdnvideo.ru/images/as-is/plain/f2/f2c72915-06f4-45f4-bacd-ae35f07e82cd.jpg@jpg',
-    title: 'Another Movie',
-    subtitle: 'Another description goes here.'
-  }
-];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        };
+        const response = await fetch('http://192.168.31.127:8080/films', { headers });
+        const data: Film[] = await response.json();
+        if (response.ok) {
+          setFilms(data);
+          setCarouselItems(data.slice(0, 5).map((film: Film) => ({
+            imageUrl: `https://your-s3-bucket-url/${film.s3_key}`,
+            title: film.title,
+            subtitle: film.description,
+          })));
+        } else {
+          console.error('Error fetching data:', data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
 
-const sections = [
-  {
-    title: 'Top Chart: Anime+',
-    data: [
-      { id: '1', title: 'The Morning Show', imageUrl: 'https://virtus-img.cdnvideo.ru/images/as-is/plain/f2/f2c72915-06f4-45f4-bacd-ae35f07e82cd.jpg@jpg', genre: 'Drama' },
-      { id: '2', title: 'Monarch: Legacy of Monsters', imageUrl: 'https://virtus-img.cdnvideo.ru/images/as-is/plain/f2/f2c72915-06f4-45f4-bacd-ae35f07e82cd.jpg@jpg', genre: 'Adventure' }
-    ]
-  },
-  {
-    title: 'Animation Studios',
-    data: [
-      { id: '1', title: 'Ted Lasso', imageUrl: 'https://virtus-img.cdnvideo.ru/images/as-is/plain/f2/f2c72915-06f4-45f4-bacd-ae35f07e82cd.jpg@jpg', genre: '' },
-      { id: '2', title: 'Season Pass', imageUrl: 'https://virtus-img.cdnvideo.ru/images/as-is/plain/f2/f2c72915-06f4-45f4-bacd-ae35f07e82cd.jpg@jpg', genre: '' }
-    ]
-  }
-];
+    fetchData();
+  }, []);
 
-const windowWidth = Dimensions.get('window').width;
-const windowHeight = Dimensions.get('window').height / 1.7;
-
-const renderCarouselItem = ({ item }: { item: CarouselItem }) => (
-  <View style={styles.carouselItem}>
-    <Image source={{ uri: item.imageUrl }} style={styles.carouselImage} />
-    <View style={styles.carouselOverlay}>
-      <Text style={styles.carouselTitle}>{item.title}</Text>
-      <Text style={styles.carouselSubtitle}>{item.subtitle}</Text>
+  const renderCarouselItem = ({ item }: { item: any }) => (
+    <View style={styles.carouselItem}>
+      <Image source={{ uri: item.imageUrl }} style={styles.carouselImage} />
+      <View style={styles.carouselOverlay}>
+        <Text style={styles.carouselTitle}>{item.title}</Text>
+        <Text style={styles.carouselSubtitle}>{item.subtitle}</Text>
+      </View>
     </View>
-  </View>
-);
+  );
 
-const HorizontalList = ({ data }: { data: AnimeItem[] }) => (
-  <FlatList
-    horizontal
-    data={data}
-    renderItem={({ item, index }) => (
+  const renderHorizontalItem = ({ item }: { item: Film }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('FilmDetails', { id: item.id.toString() })}>
       <HorizontalCard>
-        <HorizontalImageStyled source={{ uri: item.imageUrl }} />
+        <HorizontalImageStyled source={{ uri: `https://your-s3-bucket-url/${item.s3_key}` }} />
         <TitleContainer>
           <TitleText>{item.title}</TitleText>
-          {item.genre ? <GenreText>{item.genre}</GenreText> : null}
+          {item.is_series ? <GenreText>Series</GenreText> : null}
         </TitleContainer>
       </HorizontalCard>
-    )}
-    keyExtractor={(item) => item.id}
-    showsHorizontalScrollIndicator={false}
-  />
-);
+    </TouchableOpacity>
+  );
 
-const VerticalList = ({ data }: { data: AnimeItem[] }) => (
-  <FlatList
-    horizontal
-    data={data}
-    renderItem={({ item }) => (
+  const renderVerticalItem = ({ item }: { item: Film }) => (
+    <TouchableOpacity onPress={() => navigation.navigate('FilmDetails', { id: item.id.toString() })}>
       <VerticalCard>
-        <VerticalImageStyled source={{ uri: item.imageUrl }} />
+        <VerticalImageStyled source={{ uri: `https://your-s3-bucket-url/${item.s3_key}` }} />
         <Overlay>
           <TitleText>{item.title}</TitleText>
         </Overlay>
       </VerticalCard>
-    )}
-    keyExtractor={(item) => item.id}
-    showsHorizontalScrollIndicator={false}
-  />
-);
-
-const HomeScreen: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
+    </TouchableOpacity>
+  );
 
   const renderHeader = () => (
     <View>
       <Text style={styles.pageTitle}>Home</Text>
       <Carousel
         width={windowWidth}
-        height={windowHeight} // Adjust the height as needed
+        height={windowHeight}
         data={carouselItems}
         renderItem={renderCarouselItem}
-        onSnapToItem={setActiveIndex} // Update the index for dots
-        autoPlayInterval={3000} // Adjust this to control autoplay speed
+        onSnapToItem={setActiveIndex}
+        autoPlayInterval={5000}
         autoPlay={true}
         loop={true}
-        pagingEnabled={true} // Enable snapping to items
-        scrollAnimationDuration={600} // Set a faster animation duration
+        pagingEnabled={true}
+        scrollAnimationDuration={600}
       />
-      <Dots
-        length={carouselItems.length}
-        active={activeIndex}
-      />
+      <Dots length={carouselItems.length} active={activeIndex} />
     </View>
   );
 
@@ -142,7 +120,7 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView>
       <StatusBar barStyle="light-content" />
       <FlatList
-        data={sections}
+        data={films}
         ListHeaderComponent={renderHeader}
         renderItem={({ item }) => (
           <SectionContainer>
@@ -150,18 +128,23 @@ const HomeScreen: React.FC = () => {
               <SectionTitle>{item.title}</SectionTitle>
               <SectionArrow>{"..."}</SectionArrow>
             </SectionHeader>
-            {item.title === 'Animation Studios' ? (
-              <VerticalList data={item.data} />
-            ) : (
-              <HorizontalList data={item.data} />
-            )}
+            <FlatList
+              horizontal
+              data={[item]}
+              renderItem={renderHorizontalItem}
+              keyExtractor={(item) => item.id.toString()}
+              showsHorizontalScrollIndicator={false}
+            />
           </SectionContainer>
         )}
-        keyExtractor={(item) => item.title}
+        keyExtractor={(item) => item.id.toString()}
       />
     </SafeAreaView>
   );
 };
+
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height / 1.5;
 
 const styles = StyleSheet.create({
   pageTitle: {
@@ -172,7 +155,7 @@ const styles = StyleSheet.create({
   },
   carouselItem: {
     position: 'relative',
-    flex: 1
+    flex: 1,
   },
   carouselImage: {
     width: '100%',
@@ -182,17 +165,17 @@ const styles = StyleSheet.create({
   carouselOverlay: {
     position: 'absolute',
     bottom: 20,
-    left: 20
+    left: 20,
   },
   carouselTitle: {
     color: 'white',
     fontSize: 24,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   },
   carouselSubtitle: {
     color: 'white',
-    fontSize: 16
-  }
+    fontSize: 16,
+  },
 });
 
 export default HomeScreen;
